@@ -254,7 +254,7 @@
 
   <header>
     <div class="header-left">
-      <h1>Rover <span>Pookie</span></h1>
+      <h1>Rover <span>Telemetry</span></h1>
       <p>Environmental sensor dashboard</p>
     </div>
     <div class="status">
@@ -559,12 +559,7 @@
       document.getElementById('totalCount').textContent = data.length;
 
       dot.className = 'status-dot';
-      const lastTime = new Date(latest.recorded_at);
-      const secsAgo = Math.floor((Date.now() - lastTime) / 1000);
-      const ago = secsAgo < 60 ? `${secsAgo}s ago` : `${Math.floor(secsAgo/60)}m ${secsAgo%60}s ago`;
-      const isOnline = secsAgo < 120;
-      dot.className = isOnline ? 'status-dot' : 'status-dot error';
-      statusText.textContent = isOnline ? `Rover online · last reading ${ago}` : `Rover offline · last reading ${ago}`;;
+      statusText.textContent = `Live · updated ${formatTime(new Date().toISOString())}`;
 
     } catch (err) {
       dot.className = 'status-dot error';
