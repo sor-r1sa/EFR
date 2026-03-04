@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EFR — Environmentally Friendly Rover</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0c0f;
+      --surface:  #111318;
+      --border:   #1e2330;
+      --orange:   #e87c2e;
+      --blue:     #4fa3d1;
+      --green:    #a0c878;
+      --purple:   #c97dd4;
+      --amber:    #e8b84b;
+      --text:     #d8dde8;
+      --muted:    #5a6278;
+      --mono:     'Share Tech Mono', monospace;
+      --display:  'Syne', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* grid */
+    .bg-layer::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* scanning line */
+    .bg-layer::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(160,200,120,0.15), transparent);
+      animation: scan 7s linear infinite;
+    }
+
+    @keyframes scan {
+      0%   { top: -2px; }
+      100% { top: 100vh; }
+    }
+
+    /* floating orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.07;
+      animation: drift 20s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb1 { width: 600px; height: 600px; background: var(--green);  top: -200px; left: -100px; animation-delay: 0s; }
+    .orb2 { width: 400px; height: 400px; background: var(--blue);   bottom: -100px; right: -50px; animation-delay: -8s; }
+    .orb3 { width: 300px; height: 300px; background: var(--orange); top: 40%; left: 60%; animation-delay: -14s; }
+
+    @keyframes drift {
+      0%,100% { transform: translate(0,0); }
+      33%      { transform: translate(30px,-40px); }
+      66%      { transform: translate(-20px,30px); }
+    }
+
+    /* ── Layout ── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+    }
+
+    /* ── Eyebrow ── */
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .eyebrow-line {
+      width: 32px;
+      height: 1px;
+      background: var(--muted);
+    }
+
+    .eyebrow span { color: var(--green); }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      max-width: 740px;
+      margin-bottom: 72px;
+    }
+
+    .hero-title {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 8px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero-title .efr  { color: var(--green); display: block; }
+    .hero-title .dot  { color: var(--orange); }
+
+    .hero-sub {
+      font-family: var(--display);
+      font-weight: 400;
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      margin-top: 20px;
+      animation: fadeUp 0.6s 0.2s ease both;
+      line-height: 1.6;
+    }
+
+    /* ── Status strip ── */
+    .status-strip {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 28px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .status-strip-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .dot-live {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 7px var(--green);
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+    .strip-div {
+      width: 1px; height: 14px;
+      background: var(--border);
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 840px;
+      animation: fadeUp 0.6s 0.35s ease both;
+    }
+
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 32px 28px 28px;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+      display: block;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      transition: opacity 0.2s;
+    }
+
+    .card-rover::before  { background: linear-gradient(90deg, var(--orange), var(--amber)); }
+    .card-sensor::before { background: linear-gradient(90deg, var(--blue), var(--purple)); }
+
+    /* glow on hover */
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+      border-radius: 10px;
+    }
+
+    .card-rover::after  { background: radial-gradient(ellipse at 20% 0%, rgba(232,124,46,0.07) 0%, transparent 70%); }
+    .card-sensor::after { background: radial-gradient(ellipse at 20% 0%, rgba(79,163,209,0.07) 0%, transparent 70%); }
+
+    .card:hover { transform: translateY(-3px); }
+    .card:hover::after { opacity: 1; }
+    .card-rover:hover  { border-color: rgba(232,124,46,0.4); }
+    .card-sensor:hover { border-color: rgba(79,163,209,0.4); }
+
+    .card-tag {
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-tag-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+
+    .card-rover  .card-tag-dot { background: var(--orange); }
+    .card-sensor .card-tag-dot { background: var(--blue); }
+
+    .card-name {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 1.55rem;
+      line-height: 1.1;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .card-rover  .card-name em { color: var(--orange); font-style: normal; }
+    .card-sensor .card-name em { color: var(--blue);   font-style: normal; }
+
+    .card-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 24px;
+      letter-spacing: 0.02em;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-metrics {
+      display: flex;
+      gap: 16px;
+    }
+
+    .metric {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .metric-label {
+      font-size: 0.56rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .metric-value {
+      font-size: 0.78rem;
+      color: var(--text);
+    }
+
+    .card-rover  .metric-value { color: var(--orange); }
+    .card-sensor .metric-value { color: var(--blue); }
+
+    .card-arrow {
+      width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .card:hover .card-arrow { transform: translate(3px, -3px); }
+    .card-rover:hover  .card-arrow { border-color: var(--orange); }
+    .card-sensor:hover .card-arrow { border-color: var(--blue); }
+
+    .card-arrow svg {
+      width: 14px; height: 14px;
+      stroke: var(--muted);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 52px;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.5;
+      animation: fadeUp 0.6s 0.5s ease both;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Decorative corner marks ── */
+    .corner {
+      position: fixed;
+      width: 20px; height: 20px;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .corner::before, .corner::after {
+      content: '';
+      position: absolute;
+      background: var(--muted);
+      opacity: 0.3;
+    }
+    .corner::before { width: 1px; height: 100%; }
+    .corner::after  { width: 100%; height: 1px; }
+
+    .corner-tl { top: 20px; left: 20px; }
+    .corner-tr { top: 20px; right: 20px; transform: scaleX(-1); }
+    .corner-bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+    .corner-br { bottom: 20px; right: 20px; transform: scale(-1); }
+  </style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
+
+<main class="page">
+
+  <div class="eyebrow">
+    <div class="eyebrow-line"></div>
+    Environmental Monitoring System
+    <div class="eyebrow-line"></div>
+  </div>
+
+  <div class="hero">
+    <h1 class="hero-title">
+      <span class="efr">EFR<span class="dot">.</span></span>
+      Mission Control
+    </h1>
+    <p class="hero-sub">
+      Real-time nvironmental sensing for<br>
+      the Environmentally Friendly Rover pookie gang.
+    </p>
+    <div class="status-strip">
+      <div class="status-strip-item">
+        <div class="dot-live"></div>
+        Systems nominal
+      </div>
+      <div class="strip-div"></div>
+      <div class="status-strip-item">2 active pookies</div>
+      <div class="strip-div"></div>
+      <div class="status-strip-item">Live data feed</div>
+    </div>
+  </div>
+
+  <div class="cards">
+
+    <!-- Rover Pookie -->
+    <a class="card card-rover" href="rover-dashboard.html">
+      <div class="card-tag">
+        <div class="card-tag-dot"></div>
+        Mobile platform
+      </div>
+      <div class="card-name">Rover <em>Pookie</em></div>
+      <p class="card-desc">
+        Onboard environmental sensors logging atmospheric
+        temperature and barometric pressure during field traversal.
+      </p>
+      <div class="card-footer">
+        <div class="card-metrics">
+          <div class="metric">
+            <div class="metric-label">Sensors</div>
+            <div class="metric-value">Temp · Pressure</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Platform</div>
+            <div class="metric-value">Mobile rover</div>
+          </div>
+        </div>
+        <div class="card-arrow">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+        </div>
+      </div>
+    </a>
+
+    <!-- Sensor Node -->
+    <a class="card card-sensor" href="uno-dashboard.html">
+      <div class="card-tag">
+        <div class="card-tag-dot"></div>
+        Fixed sensor node
+      </div>
+      <div class="card-name"><em>Sensors</em></div>
+      <p class="card-desc">
+        Stationary air quality monitor tracking temperature,
+        humidity, and gas concentrations via MQ-3 and MQ-9 sensors.
+      </p>
+      <div class="card-footer">
+        <div class="card-metrics">
+          <div class="metric">
+            <div class="metric-label">Sensors</div>
+            <div class="metric-value">Temp · Hum · MQ-3 · MQ-9</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Platform</div>
+            <div class="metric-value">Arduino Uno</div>
+          </div>
+        </div>
+        <div class="card-arrow">
+          <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="footer">EFR Mission Control &nbsp;·&nbsp; Environmental Monitoring Programme</div>
+
+</main>
+
+</body>
+</html>
